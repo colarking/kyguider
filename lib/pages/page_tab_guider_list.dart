@@ -16,12 +16,6 @@ import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class PageTabGuiders extends StatefulWidget {
-  var gId = 0;
-
-  PageGuider(Map map) {
-    gId = map["gId"];
-  }
-
   @override
   State<PageTabGuiders> createState() => _PageTabGuiderState();
 }
@@ -30,11 +24,33 @@ class _PageTabGuiderState extends State<PageTabGuiders> {
   bool _loading = false;
   var _list = [];
   var _cityList = [];
+  bool _haveCity = false;
+
+  var cityCallback;
+  var itemCallback;
 
   @override
   void initState() {
     super.initState();
     _initData();
+    cityCallback =  (item) async {
+      //{cover: https://najiuzou-1256768961.file.myqcloud.com/upload/20191230/224144191bc9a0.jpg,
+      // gid: 382,
+      // gTitle: 【春日相约｜四川全境+周边游】专业中级中英文导游+成都市-熊猫基地-都江堰-青城山-峨眉山-乐山大佛-九寨沟-稻城亚丁等},
+      // ARouters.push(
+      //     context, ARouters.page_detail, params: {"accountId": item['accountId']});
+      // var aRouters = ARouters.push(context, ARouters.page_guider,params: {"gId":gid});
+    };
+    itemCallback =  (gid) async {
+      //{cover: https://najiuzou-1256768961.file.myqcloud.com/upload/20191230/224144191bc9a0.jpg,
+      // gid: 382,
+      // gTitle: 【春日相约｜四川全境+周边游】专业中级中英文导游+成都市-熊猫基地-都江堰-青城山-峨眉山-乐山大佛-九寨沟-稻城亚丁等},
+      // ARouters.push(
+      //     context, ARouters.page_detail, params: {"accountId": item['accountId']});
+      // var aRouters = ARouters.push(context, ARouters.page_guider,params: {"gId":gid});
+      var aRouters = ARouters.push(context, ARouters.page_guiders,
+          params: {"cityMode":false,"guideId":gid.toString()});
+    };
   }
   @override
   void dispose() {
@@ -46,24 +62,36 @@ class _PageTabGuiderState extends State<PageTabGuiders> {
   Widget build(BuildContext context) {
     var fullWidth = MediaQuery.of(context).size.width;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("导游详情"),
-      ),
       body: _list.isEmpty
-          ? Container()
-          : GridView.builder(
-        itemCount: _list.length,
-        itemBuilder: (BuildContext context, int index) {
-          var item = _list[index];
-          return  Row(
-            children: _buildItem(context, item, item.length, fullWidth),
-          );
-        }, gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.75,
-      ),
-      ),
+          ? Center(
+        child: TextButton(
+          onPressed: () {
+            _initData();
+            setState(() {
+
+            });
+          },
+          child: Text(_loading?"正在加载...":"暂无数据,点击重试",style: const TextStyle(fontSize: 25),),
+        ),
+      )
+          :
+      CustomScrollView(
+          slivers: <Widget>[
+            SliverList(
+              delegate: SliverChildListDelegate(
+                [
+                  buildCityItem(),
+                ],
+              ),
+            ),
+            SliverGrid(
+              gridDelegate:
+              const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+              delegate: SliverChildListDelegate(
+                _buildGridItems(),
+              ),
+            ),
+          ]),
     );
   }
 
@@ -73,88 +101,89 @@ class _PageTabGuiderState extends State<PageTabGuiders> {
       return;
     }
     _loading = true;
-    EasyLoading.show(status: 'loading...');
     Response response =
         await DioUtil.instance.get(URL.BASE_URL + URL.BASE_TAB_GUIDERS,);
     if (response.statusCode != 200 ||
         response.data == null ||
         response.data["code"] != 0 ||
-        response.data["data"] == null) {
-      EasyLoading.showError(
-        "获取数据失败,请重试",
-      );
+        response.data["data"] == null ||response.data["data"] =="") {
     } else {
       var data = response.data["data"];
-      if (data["cityObj"] != null) {
-        _cityList = data["cityObj"];
+      if (data["cityList"] != null) {
+        _cityList = data["cityList"];
+        _haveCity = _cityList.isNotEmpty;
       }
-      doRandomList(response.data["data"]);
-      // _refreshController.loadComplete();
-      // _refreshController.refreshCompleted();
+      // "guideId" -> 10653
+      //"guideImg" -> "https://najiuzou-1256768961.file.myqcloud.com/upload/20181219/1732173188dc8e.png"
+      //"guideName" -> "朱海波"
+
+      _list.addAll(response.data["data"]["guideList"]);
     }
-    EasyLoading.dismiss();
+    _loading = false;
     if (mounted) {
       setState(() {});
     }
-    _loading = false;
+
   }
 
-
-  void doRandomList(List<dynamic> tList) {
-    var random = Random();
-    for (int i = 0; i < tList.length;) {
-      var showItemCount = random.nextInt(10000) % 3 + 1;
-      if (showItemCount == 2 && i >= tList.length - 1) {
-        showItemCount = 1;
-      } else if (showItemCount == 3 && i >= tList.length - 2) {
-        showItemCount = 1;
-      }
-      switch (showItemCount) {
-        case 1:
-          _list.add([tList[i]]);
-          i++;
-          break;
-        case 2:
-          _list.add([tList[i], tList[i + 1]]);
-          i += 2;
-          break;
-        case 3:
-          _list.add([tList[i], tList[i + 1], tList[i + 2]]);
-          i += 3;
-          break;
-      }
-    }
+  Widget buildCityItem() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(
+          height: 10,
+        ),
+        Row(
+          children: [
+            const SizedBox(
+              width: 10,
+            ),
+            const Expanded(child: Text("热门城市")),
+            GestureDetector(
+                onTap: () {
+                  ARouters.push(context, ARouters.page_citys,
+                      params: {"citys": _cityList});
+                },
+                child: Container(
+                    margin: const EdgeInsets.only(right: 10),
+                    padding: const EdgeInsets.only(
+                        left: 10, right: 10, top: 5, bottom: 5),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey, width: 0.5),
+                    ),
+                    child: const Text("查看全部"))),
+          ],
+        ),
+        Row(
+          children: _buildCityItem(),
+        ),
+      ],
+    );
   }
-
-  List<Widget> _buildItem(
-      context, List itemList, int length, double fullWidth) {
+  _buildCityItem() {
+    var fullWidth = MediaQuery.of(context).size.width;
     List<Widget> wids = [];
-    double itemWidth = (fullWidth - (length + 1) * 10) / length;
-    itemList.forEach((item) {
-      var title = item["gTitle"] ?? "";
-      var imgUrl = item["cover"] ??
+    double itemWidth = (fullWidth - (4) * 10) / 3;
+    var maxSize = _cityList.length > 3 ? 3 : _cityList.length;
+    var itemCallback = (value) {
+      var aRouters = ARouters.push(context, ARouters.page_guiders,
+          params: {"cityMode":false,"guideId":value});
+    };
+    for (var i = 0; i < maxSize; i++) {
+      var item = _cityList[i];
+      var title = item["guideName"] ?? "";
+      var imgUrl = item["guideImg"] ??
           "http://img02.sogoucdn.com/app/a/100520021/199075a69e82debad565c070093484ca";
-      wids.add(_buildItemWidget(fullWidth,itemWidth,length,title,item["gid"],imgUrl));
-    });
+      wids.add(_buildItemWidget(imgUrl, title,item["guideId"], itemCallback,itemWidth: itemWidth));
+    }
     return wids;
   }
-
-  Widget _buildItemWidget(fullWidth,itemWidth,length,title,gid, imgUrl) {
-    var itemHeight = length == 1?itemWidth/2:itemWidth;
+  Widget _buildItemWidget(imgUrl,title,gid,callback,{itemWidth = 250.0,itemHeight = 150.0}) {
     return GestureDetector(
-      onTap: () async {
-        //{cover: https://najiuzou-1256768961.file.myqcloud.com/upload/20191230/224144191bc9a0.jpg,
-        // gid: 382,
-        // gTitle: 【春日相约｜四川全境+周边游】专业中级中英文导游+成都市-熊猫基地-都江堰-青城山-峨眉山-乐山大佛-九寨沟-稻城亚丁等},
-        // ARouters.push(
-        //     context, ARouters.page_detail, params: {"accountId": item['accountId']});
-        var aRouters = ARouters.push(context, ARouters.page_guider,params: {"gId":gid});
-      },
+      onTap: ()=>callback.call(gid),
       child: Container(
-        height: itemHeight + 50,
-        constraints:
-        BoxConstraints(maxHeight: itemHeight + 50, maxWidth: itemWidth),
-        margin: const EdgeInsets.only(left: 10, top: 10),
+        margin: EdgeInsets.only(left: 10, top: 10,right: (itemWidth==250?10.0:0.0)),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: Colors.white,
@@ -175,66 +204,61 @@ class _PageTabGuiderState extends State<PageTabGuiders> {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              height: itemHeight,
-              child: Stack(
-                children: [
-                  ExtendedImage(
-                    width: itemWidth,
-                    height: itemHeight,
-                    fit: BoxFit.fill,
-                    shape: BoxShape.rectangle,
-                    borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10)),
-                    image: ExtendedResizeImage(
-                      ExtendedNetworkImageProvider(imgUrl
-                      ),
-                      compressionRatio: 0.1,
-                      maxBytes: 1000 << 10,
-                      width: itemWidth.toInt(),
-                      height: itemHeight.toInt(),
-                    ),
-                    loadStateChanged: (ExtendedImageState state) {
-                      switch (state.extendedImageLoadState) {
-                        case LoadState.failed:
-                          return LinearProgressIndicator();
-                        case LoadState.loading:
-                          return LinearProgressIndicator();
-                        case LoadState.completed:
-                          return ExtendedRawImage(
-                            image: state.extendedImageInfo?.image,
-                            width: itemWidth,
-                            height: itemHeight,
-                            fit: BoxFit.cover,
-                          );
-                      }
-                    },
+            ExtendedImage(
+                width: itemWidth,
+                height: itemHeight,
+                fit: BoxFit.fill,
+                shape: BoxShape.rectangle,
+                borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10)),
+                image: ExtendedResizeImage(
+                  ExtendedNetworkImageProvider(imgUrl
                   ),
-                ],
+                  compressionRatio: 0.1,
+                  maxBytes: 1000 << 10,
+                  width: itemWidth.toInt(),
+                  height: itemHeight.toInt(),
+                ),
+                loadStateChanged: (ExtendedImageState state) {
+                  switch (state.extendedImageLoadState) {
+                    case LoadState.failed:
+                      return LinearProgressIndicator();
+                    case LoadState.loading:
+                      return LinearProgressIndicator();
+                    case LoadState.completed:
+                      return ExtendedRawImage(
+                        image: state.extendedImageInfo?.image,
+                        width: itemWidth,
+                        height: itemHeight,
+                        fit: BoxFit.cover,
+                      );
+                  }
+                },
               ),
-            ),
-            const SizedBox(
-              height: 6,
-            ),
             Container(
-                padding: const EdgeInsets.only(left: 10, right: 10),
+                padding: const EdgeInsets.only(left: 10,top: 10, right: 10,bottom: 10),
                 alignment: Alignment.centerLeft,
                 child: Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: length == 1
-                          ? 14
-                          : length == 2
-                          ? 12
-                          : 10),
-                  maxLines: length == 3 ? 3 : 2,
+                      fontSize: 14),
+                  maxLines:  1,
                 )),
           ],
         ),
       ),
     );
+  }
+
+  List<Widget> _buildGridItems() {
+    List<Widget> wids = [];
+    _list.forEach((item) {
+      wids.add(_buildItemWidget(item["guideImg"],item["guideName"],item["guideId"],itemCallback));
+    });
+    return wids;
+
   }
 
 

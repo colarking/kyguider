@@ -13,9 +13,13 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 class PageGuiders extends StatefulWidget{
 
   String cityName = "";
+  String guideId = "";
+  bool cityMode = true;
 
   PageGuiders(Map params, {Key? key}) : super(key: key){
     cityName = params["city"]??"";
+    guideId = params["guideId"]??"";
+    cityMode = params["cityMode"]?? true;
   }
 
   @override
@@ -42,11 +46,19 @@ class _PageGuidersState extends State<PageGuiders> {
     }
     _loading = true;
     EasyLoading.show(status: 'loading...');
-    Response response =
-    await DioUtil.instance.get(URL.BASE_URL + URL.BASE_LIST, params: {
-      "page": _page,
-      "cityName":widget.cityName,
-    });
+    Response response;
+    if(widget.cityMode){
+      response = await DioUtil.instance.get(URL.BASE_URL + URL.BASE_LIST, params: {
+        "page": _page,
+        "cityName":widget.cityName,
+      });
+    }else{
+      response = await DioUtil.instance.get(URL.BASE_URL + URL.BASE_TAB_GUIDERS_DETAIL_LIST, params: {
+        "page": _page,
+        "guideId":widget.guideId,
+      });
+    }
+
     if (response.statusCode != 200 ||
         response.data == null ||
         response.data["code"] != 0 ||
@@ -61,12 +73,13 @@ class _PageGuidersState extends State<PageGuiders> {
       // }
       // doRandomList(tList);
     } else {
+      var gKey = widget.cityMode?"guideObj":"list";
       Map<String, dynamic> data = response.data["data"];
-      if (data["guideObj"] != null) {
+      if (data[gKey] != null) {
         if (_page == 0) {
           _list.clear();
         }
-        doRandomList(data["guideObj"]);
+        doRandomList(data[gKey]);
         _page++;
       }
       // _refreshController.loadComplete();

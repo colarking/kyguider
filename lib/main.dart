@@ -10,6 +10,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:guider/pages/page_tab_guider_list.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -258,8 +259,8 @@ class _MyHomePageState extends State<MyHomePage> {
               //     }),
             ),
           ),
-          _buildGuidersPage(),
-          _buildMinePage(),
+          PageTabGuiders(),
+          // _buildMinePage(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -379,9 +380,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _buildGuidersPage() {
-    return Container(
-      color: Colors.orange,
-    );
+    return ;
   }
 
   _buildMinePage() {
