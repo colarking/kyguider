@@ -14,7 +14,8 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # Read more about Android versioning at https://developer.android.com/studio/publish/versioning
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
-# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.
+
 version: 1.0.0+1
 
 environment:
@@ -46,7 +47,6 @@ dependencies:
 
   flutter_screenutil: ^5.0.0+2
   flutter_swiper_null_safety: ^1.0.2
-  flutter_html: ^2.1.5
   url_launcher: ^6.0.12
   awesome_dialog: ^2.1.1
 

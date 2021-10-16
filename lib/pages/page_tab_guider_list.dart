@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:math';
-
 import 'package:guider/dio_util/dio_url.dart';
 import 'package:guider/dio_util/dio_util.dart';
 import 'package:guider/pages/base_routers.dart';
@@ -10,10 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:flutter_html/flutter_html.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_swiper_null_safety/flutter_swiper_null_safety.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class PageTabGuiders extends StatefulWidget {
   @override
@@ -42,12 +35,6 @@ class _PageTabGuiderState extends State<PageTabGuiders> {
       // var aRouters = ARouters.push(context, ARouters.page_guider,params: {"gId":gid});
     };
     itemCallback =  (gid) async {
-      //{cover: https://najiuzou-1256768961.file.myqcloud.com/upload/20191230/224144191bc9a0.jpg,
-      // gid: 382,
-      // gTitle: 【春日相约｜四川全境+周边游】专业中级中英文导游+成都市-熊猫基地-都江堰-青城山-峨眉山-乐山大佛-九寨沟-稻城亚丁等},
-      // ARouters.push(
-      //     context, ARouters.page_detail, params: {"accountId": item['accountId']});
-      // var aRouters = ARouters.push(context, ARouters.page_guider,params: {"gId":gid});
       var aRouters = ARouters.push(context, ARouters.page_guiders,
           params: {"cityMode":false,"guideId":gid.toString()});
     };
@@ -113,10 +100,6 @@ class _PageTabGuiderState extends State<PageTabGuiders> {
         _cityList = data["cityList"];
         _haveCity = _cityList.isNotEmpty;
       }
-      // "guideId" -> 10653
-      //"guideImg" -> "https://najiuzou-1256768961.file.myqcloud.com/upload/20181219/1732173188dc8e.png"
-      //"guideName" -> "朱海波"
-
       _list.addAll(response.data["data"]["guideList"]);
     }
     _loading = false;
@@ -168,14 +151,14 @@ class _PageTabGuiderState extends State<PageTabGuiders> {
     var maxSize = _cityList.length > 3 ? 3 : _cityList.length;
     var itemCallback = (value) {
       var aRouters = ARouters.push(context, ARouters.page_guiders,
-          params: {"cityMode":false,"guideId":value});
+          params: {"cityMode":true,"city":value});
     };
     for (var i = 0; i < maxSize; i++) {
       var item = _cityList[i];
-      var title = item["guideName"] ?? "";
-      var imgUrl = item["guideImg"] ??
+      var title = item["city"] ?? "";
+      var imgUrl = item["img"] ??
           "http://img02.sogoucdn.com/app/a/100520021/199075a69e82debad565c070093484ca";
-      wids.add(_buildItemWidget(imgUrl, title,item["guideId"], itemCallback,itemWidth: itemWidth));
+      wids.add(_buildItemWidget(imgUrl, title,title, itemCallback,itemWidth: itemWidth));
     }
     return wids;
   }
